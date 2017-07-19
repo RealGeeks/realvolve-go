@@ -19,6 +19,15 @@ const DefaultURL = "https://start.realvolve.com"
 
 var httpcli = &http.Client{Timeout: 3 * time.Second}
 
+// ErrUnauthorized is returned on status 401
+type ErrUnauthorized struct {
+	Body string
+}
+
+func (err *ErrUnauthorized) Error() string {
+	return fmt.Sprintf("401 Unauthorized %v", err.Body)
+}
+
 // Realvolve API client
 //
 // http://go.realvolve.com/api
@@ -78,12 +87,15 @@ func (rv *Realvolve) post(path string, data url.Values) (Response, error) {
 	if err != nil {
 		return Response{}, err
 	}
+	if resp.StatusCode == 401 {
+		return Response{}, &ErrUnauthorized{Body: string(respbody)}
+	}
 	var respinfo Response
 	if err := json.Unmarshal(respbody, &respinfo); err != nil {
-		return Response{}, fmt.Errorf("realvolve: POST %s %v returned %d and body failed to decode (%v) %v", path, string(data.Encode()), resp.StatusCode, err, string(respbody))
+		return Response{}, fmt.Errorf("realvolve: POST %s %v returned %d and body failed to decode (%v) '%v'", path, string(data.Encode()), resp.StatusCode, err, string(respbody))
 	}
 	if !respinfo.Success {
-		return Response{}, fmt.Errorf("realvolve: POST %s %v returned %d and body %v", path, string(data.Encode()), resp.StatusCode, string(respbody))
+		return Response{}, fmt.Errorf("realvolve: POST %s %v returned %d and body '%v'", path, string(data.Encode()), resp.StatusCode, string(respbody))
 	}
 	return respinfo, nil
 }
