@@ -95,6 +95,8 @@ type Contact struct {
 	LastName  string `json:"last_name"`
 	HomeEmail string
 	WorkEmail string
+	HomePhone string
+	WorkPhone string
 }
 
 // Values return a map of values ready to be sent when creating
@@ -103,8 +105,18 @@ func (c Contact) Values() url.Values {
 	vals := url.Values{}
 	vals.Set("contact[primary][first_name]", c.FirstName)
 	vals.Set("contact[primary][last_name]", c.LastName)
-	vals.Set("contact[details][email_address][home_email]", c.HomeEmail)
-	vals.Set("contact[details][email_address][work_email]", c.WorkEmail)
+	if c.HomeEmail != "" {
+		vals.Set("contact[details][email_address][home_email]", c.HomeEmail)
+	}
+	if c.WorkEmail != "" {
+		vals.Set("contact[details][email_address][work_email]", c.WorkEmail)
+	}
+	if c.HomePhone != "" {
+		vals.Set("contact[details][phone_number][home_phone]", c.HomePhone)
+	}
+	if c.WorkPhone != "" {
+		vals.Set("contact[details][phone_number][work_phone]", c.WorkPhone)
+	}
 	return vals
 }
 
