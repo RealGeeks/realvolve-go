@@ -6,6 +6,7 @@ package realvolve
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -47,13 +48,29 @@ type Realvolve struct {
 // AddContact creates a new contact in Realvolve
 //
 // Fields accepted to create a contact are: FirstName, LastName,
-// HomeEmail and WorkEmail
+// HomeEmail, WorkEmail, HomePhone and WorkPhone
 //
 // On success a new Contact object is returned with fields: ID,
 // FirstName and LastName
 func (rv *Realvolve) AddContact(c Contact) (created Contact, err error) {
 	resp, err := rv.post("/utility_api/v1/contacts", c.Values())
 	return resp.Contact, err
+}
+
+// UpdateContact updates an existing contact in Realvolve
+//
+// ID field of Contact provided is required
+//
+// Fields accepted to update are: FirstName, LastName,
+// HomeEmail, WorkEmail, HomePhone and WorkPhone
+func (rv *Realvolve) UpdateContact(c Contact) error {
+	if c.ID == 0 {
+		return errors.New("realvolve: Contact.ID is required to EditContact")
+	}
+	data := c.Values()
+	data.Set("contact_id", strconv.Itoa(c.ID))
+	_, err := rv.post("/utility_api/v1/contacts/update_contact", data)
+	return err
 }
 
 func (rv *Realvolve) AddNote(contactID int, note string) error {
